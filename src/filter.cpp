@@ -12,7 +12,7 @@ using namespace std;
 void convolve(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB], int N, double kernel[][11]);
 void dummy(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB]);
 void sobel(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB]);
-void gaussian(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB]);
+void gaussian(double* k, unsigned char in[][SIZE][RGB], int N, double sigma);
 void gaussian_filter(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB], int N, double sigma);
 void usharp(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB]);
 
@@ -276,14 +276,46 @@ void sobel(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB])
    // Add the rest of your functions here (i.e. gaussian, gaussian_filter, unsharp)
 }
 
-void gaussian(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB]){
+//Generates the Kernel to be used, stores it in whatever the first argument points to
+void gaussian(double* k, unsigned char in[][SIZE][RGB], int N, double sigma){
+	//Remember to dereference k whenever it is being used
 
+	//Prints the final kernel to the screen
+	for(int i = 0; i < 11; i++){
+		for(int j = 0; j < 11; j++){
+			cout << *k[i][j] << " ";
+		}
+		cout << endl;
+	}
 }
 void gaussian_filter(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB], int N, double sigma){
 
 }
 void usharp(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB]){
+	//Passes a blank kernel to the gaussian method in order to generate a filter kernel
+	double kernel[11][11];
+	double* kernelPointer;
+	gaussian(kernelPointer, in, 3, 10);
+	//Stores a blurred image in out
+	gaussian_filter(out, in, 3, 10);
 
+	//Subtracts the blurred image from the origional input image
+	for(int i = 0; i < SIZE; i++){
+		for(int j = 0; j < SIZE; j++){
+			for(int k = 0; k < RGB; k++){
+				in[i][j][k] -= out[i][j][k];
+			}
+		}
+	}
+
+	//copies values of in into out
+	for(int i = 0; i < SIZE; i++){
+			for(int j = 0; j < SIZE; j++){
+				for(int k = 0; k < RGB; k++){
+					out[i][j][k] = in[i][j][k];
+				}
+			}
+		}
 }
 
 
