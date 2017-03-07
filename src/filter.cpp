@@ -7,12 +7,13 @@
 
 using namespace std;
 
+
 //============================Add function prototypes here======================
 
 void convolve(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB], int N, double kernel[][11]);
 void dummy(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB]);
 void sobel(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB]);
-void gaussian(double* k, unsigned char in[][SIZE][RGB], int N, double sigma);
+void gaussian(double kernel[][11], unsigned char in[][SIZE][RGB], int N, double sigma);
 void gaussian_filter(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB], int N, double sigma);
 void usharp(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB]);
 
@@ -276,14 +277,14 @@ void sobel(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB])
 	// Add the rest of your functions here (i.e. gaussian, gaussian_filter, unsharp)
 }
 
-//Generates the Kernel to be used, stores it in whatever the first argument points to
-void gaussian(double* k, unsigned char in[][SIZE][RGB], int N, double sigma){
+//Generates the Kernel to be used, stores it in the 2D array passed to it (hopefully)
+void gaussian(double kernel[][11], unsigned char in[][SIZE][RGB], int N, double sigma){
 	//Remember to dereference k whenever it is being used
 
 	//Prints the final kernel to the screen
 	for(int i = 0; i < 11; i++){
 		for(int j = 0; j < 11; j++){
-			cout << *k[i][j] << " ";
+			cout << kernel[i][j] << " ";
 		}
 		cout << endl;
 	}
@@ -295,8 +296,8 @@ void usharp(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB]){
 	//Passes a blank kernel to the gaussian method in order to generate a filter kernel
 	//maybe try double kernel = new double[11][11]; if this doesn't work
 	double kernel[11][11];
-	double* kernelPointer;
-	gaussian(kernelPointer, in, 3, 10);
+	//double* kernelPointer;
+	gaussian(kernel, in, 3, 10);
 	//Stores a blurred image in "out"
 	gaussian_filter(out, in, 3, 10);
 
