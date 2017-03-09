@@ -13,7 +13,7 @@ using namespace std;
 void convolve(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB], int N, double kernel[][11]);
 void dummy(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB]);
 void sobel(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB]);
-void gaussian(double kernel[][11], unsigned char in[][SIZE][RGB], int N, double sigma);
+void gaussian(double kernel[][11], int N, double sigma);
 void gaussian_filter(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB], int N, double sigma);
 void usharp(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB]);
 
@@ -278,8 +278,35 @@ void sobel(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB])
 }
 
 //Generates the Kernel to be used, stores it in the 2D array passed to it (hopefully)
-void gaussian(double kernel[][11], unsigned char in[][SIZE][RGB], int N, double sigma){
-	//Remember to dereference k whenever it is being used
+void gaussian(double kernel[][11], int N, double sigma){
+
+	//A = 1 so we're ignoring it
+
+	double r, s = 2.0 * sigma * sigma;
+
+	// sum will be used to normalize kernel
+	double sum = 0.0;
+
+	// generate NxN kernel
+	for (int x = (-N/2); x <= (N/2); x++)
+	{
+		for(int y = (-N/2); y <= (N/2); y++)
+		{
+			//r stores our exponent
+			r = (x*x + y*y)/s;
+			//Final calculation is made here and Gaussian indexes are converted to C++ indexes
+			kernel[x + 5][y + 5] = exp(r*-1.0);
+			sum += kernel[x + 5][y + 5];
+		}
+	}
+
+	// normalize the Kernel
+	for(int i = 0; i < 5; ++i){
+		for(int j = 0; j < 5; ++j){
+			kernel[i][j] /= sum;
+		}
+	}
+
 
 	//Prints the final kernel to the screen
 	for(int i = 0; i < 11; i++){
@@ -290,14 +317,15 @@ void gaussian(double kernel[][11], unsigned char in[][SIZE][RGB], int N, double 
 	}
 }
 void gaussian_filter(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB], int N, double sigma){
+	//Passes a blank kernel to the gaussian method in order to generate a filter kernel
+	double kernel[11][11];
+	gaussian(kernel, 4, 10);
+	convolve(out, in, 11, kernel);
+
 
 }
 void usharp(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB]){
-	//Passes a blank kernel to the gaussian method in order to generate a filter kernel
-	//maybe try double kernel = new double[11][11]; if this doesn't work
-	double kernel[11][11];
-	//double* kernelPointer;
-	gaussian(kernel, in, 3, 10);
+
 	//Stores a blurred image in "out"
 	gaussian_filter(out, in, 3, 10);
 
