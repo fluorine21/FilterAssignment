@@ -7,7 +7,6 @@
 
 using namespace std;
 
-
 //============================Add function prototypes here======================
 
 void convolve(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB], int N, double kernel[][11]);
@@ -15,7 +14,7 @@ void dummy(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB]);
 void sobel(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB]);
 void gaussian(double kernel[][11], int N, double sigma);
 void gaussian_filter(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB], int N, double sigma);
-void usharp(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB]);
+void unsharp(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB], int N, double sigma, double alpha);
 
 //============================Do not change code in main()======================
 
@@ -23,77 +22,77 @@ void usharp(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB]);
 
 int main(int argc, char* argv[])
 {
-	//First check argc
-	if(argc < 3)
-	{
-		//we need at least ./filter <input file> <filter name> to continue
-		cout << "usage: ./filter <input file> <filter name> <filter parameters>";
-		cout << " <output file name>" << endl;
-		return -1;
-	}
-	//then check to see if we can open the input file
-	unsigned char input[SIZE][SIZE][RGB];
-	unsigned char output[SIZE][SIZE][RGB];
-	char* outfile;
-	int N;
-	double sigma, alpha;
-	double kernel[11][11];
+   //First check argc
+  if(argc < 3)
+    {
+      //we need at least ./filter <input file> <filter name> to continue
+      cout << "usage: ./filter <input file> <filter name> <filter parameters>";
+      cout << " <output file name>" << endl;
+      return -1;
+    }
+   //then check to see if we can open the input file
+   unsigned char input[SIZE][SIZE][RGB];
+   unsigned char output[SIZE][SIZE][RGB];
+   char* outfile;
+   int N;
+   double sigma, alpha;
+   double kernel[11][11];
 
-	// read file contents into input array
-	int status = readRGBBMP(argv[1], input);
-	if(status != 0)
-	{
-		cout << "unable to open " << argv[1] << " for input." << endl;
-		return -1;
-	}
-	//Input file is good, now look at next argument
-	if( strcmp("sobel", argv[2]) == 0)
-	{
-		sobel(output, input);
-		outfile = argv[3];
-	}
-	else if( strcmp("blur", argv[2]) == 0)
-	{
-		if(argc < 6)
-		{
-			cout << "not enough arguments for blur." << endl;
-			return -1;
-		}
-		N = atoi(argv[3]);
-		sigma = atof(argv[4]);
-		outfile = argv[5];
-		gaussian_filter(output, input, N, sigma);
-	}
-	else if( strcmp("unsharp", argv[2]) == 0)
-	{
-		if(argc < 7)
-		{
-			cout << "not enough arguments for unsharp." << endl;
-			return -1;
-		}
-		N = atoi(argv[3]);
-		sigma = atof(argv[4]);
-		alpha = atof(argv[5]);
-		outfile = argv[6];
-		//unsharp(output, input, N, sigma, alpha);
+   // read file contents into input array
+   int status = readRGBBMP(argv[1], input);
+   if(status != 0)
+   {
+      cout << "unable to open " << argv[1] << " for input." << endl;
+      return -1;
+   }
+   //Input file is good, now look at next argument
+   if( strcmp("sobel", argv[2]) == 0)
+   {
+     sobel(output, input);
+     outfile = argv[3];
+   }
+   else if( strcmp("blur", argv[2]) == 0)
+   {
+     if(argc < 6)
+       {
+	 cout << "not enough arguments for blur." << endl;
+	 return -1;
+       }
+     N = atoi(argv[3]);
+     sigma = atof(argv[4]);
+     outfile = argv[5];
+     gaussian_filter(output, input, N, sigma);
+   }
+   else if( strcmp("unsharp", argv[2]) == 0)
+   {
+     if(argc < 7)
+       {
+	 cout << "not enough arguments for unsharp." << endl;
+	 return -1;
+       }
+     N = atoi(argv[3]);
+     sigma = atof(argv[4]);
+     alpha = atof(argv[5]);
+     outfile = argv[6];
+     unsharp(output, input, N, sigma, alpha);
 
-	}
-	else if( strcmp("dummy", argv[2]) == 0)
-	{
-		//do dummy
-		dummy(output, input);
-		outfile = argv[3];
-	}
-	else
-	{
-		cout << "unknown filter type." << endl;
-		return -1;
-	}
+   }
+   else if( strcmp("dummy", argv[2]) == 0)
+   {
+     //do dummy
+     dummy(output, input);
+     outfile = argv[3];
+   }
+   else
+   {
+      cout << "unknown filter type." << endl;
+      return -1;
+   }
 
-	if(writeRGBBMP(outfile, output) != 0)
-	{
-		cout << "error writing file " << argv[3] << endl;
-	}
+   if(writeRGBBMP(outfile, output) != 0)
+   {
+      cout << "error writing file " << argv[3] << endl;
+   }
 
 }   
 
@@ -138,8 +137,8 @@ void convolve(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB],
 
 
 	//first set all of padded to 0 (black)
-	for (int i = 0; i < SIZE + 11; i++) {
-		for (int j = 0; j < SIZE + 11; j++) {
+	for (int i = 0; i < (SIZE + 10); i++) {
+		for (int j = 0; j < (SIZE + 10); j++) {
 			for (int k = 0; k < RGB; k++) {
 				padded[i][j][k] = 0;
 			}
@@ -147,9 +146,9 @@ void convolve(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB],
 	}
 
 
-	//now copy input into padding to appropriate locations
-	for (int i = 5; i < SIZE; i++) {
-		for (int j = 5; j < SIZE; j++) {
+	//now copy input into padded to appropriate locations
+	for (int i = 5; i < SIZE+5; i++) {
+		for (int j = 5; j < SIZE+5; j++) {
 			for (int k = 0; k < RGB; k++) {
 				padded[i][j][k] = in[i-5][j-5][k];
 			}
@@ -171,12 +170,12 @@ void convolve(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB],
 	// actual image) placing the results in temp (i.e. unclamped result)
 	//Here we give you the structure of the convolve for-loops, you need
 	//to figure out the loop limits
-	for (int y = 5 ; y < SIZE-5; y++) {
-		for (int x =5 ; x < SIZE-5; x++) {
+	for (int y = 5; y < SIZE+5; y++) {
+		for (int x = 5; x < SIZE+5; x++) {
 			for (int k = 0; k < RGB; k++) {
-				for (int i =0 ; i <= 10 ; i++) {
-					for (int j =0 ; j <= 10; j++) {
-						temp[x][y][k] += padded[x][y][k] * kernel[i][j];
+				for (int i = -(N/2); i <= (N/2) ; i++) {
+					for (int j = -(N/2); j <= (N/2); j++) {
+						temp[x-5][y-5][k] += (padded[x+i][y+j][k] * kernel[(N/2)+i][(N/2)+j]);
 					}
 				}
 			}
@@ -189,14 +188,14 @@ void convolve(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB],
 	for (int i = 0; i < SIZE; i++) {
 		for (int j = 0; j < SIZE; j++) {
 			for (int k = 0; k < RGB; k++) {
-				if ((unsigned char)temp[i][j][k] > 0 && (unsigned char)temp[i][j][k] < 255) {
+			   if(temp[i][j][k] > 0 && temp[i][j][k] < 265){
 					out[i][j][k] = (unsigned char)temp[i][j][k];
 				}
-				else if ((unsigned char)temp[i][j][k] > 255) {
-					out[i][j][k] = 255;
+				else if(temp[i][j][k] > 255){
+				   out[i][j][k] = 255;
 				}
-				else {
-					out[i][j][k] = 0;
+				else{
+				   out[i][j][k] = 0;
 				}
 			}
 		}
@@ -219,18 +218,16 @@ void sobel(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB])
 	double s_h2[3][3] = { {1, 0, -1},
 			{2, 0, -2},
 			{1, 0, -1} };
-
 	unsigned char h1_soble[SIZE][SIZE][RGB]; //hold intemediate images
 	unsigned char h2_soble[SIZE][SIZE][RGB];
 
 	for (int i = 0; i < 11; i++)
 	{
-		for(int j=0; j < 11; j++)
+		for(int j = 0; j < 11; j++)
 		{
 			k[i][j] = 0;
 		}
 	}
-
 
 	// Copy in 1st 3x3 horizontal sobel kernel (i.e. copy s_h1 into k)
 	for (int i = 0; i < 3; i++) {
@@ -238,7 +235,6 @@ void sobel(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB])
 			k[i][j] = s_h1[i][j];
 		}
 	}
-
 
 
 	// Call convolve to apply horizontal sobel kernel with result in h1_soble
@@ -257,102 +253,136 @@ void sobel(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB])
 	convolve(h2_soble, in, 3, k);
 
 
+
+
 	// Add the two results (applying clamping) to produce the final output
+
+	int temp[SIZE][SIZE][RGB];
+
 	for (int i = 0; i < SIZE; i++) {
 		for (int j = 0; j < SIZE; j++) {
-			for (int k = 0; k < RGB; k++) {
-				if ((unsigned char)h1_soble[i][j][k]+(unsigned char)h2_soble[i][j][k] > 0 && (unsigned char)h1_soble[i][j][k] + (unsigned char)h2_soble[i][j][k] < 255) {
-					out[i][j][k] = (unsigned char)h1_soble[i][j][k] + (unsigned char)h2_soble[i][j][k];
+			for (int l = 0; l < RGB; l++) {
+				temp[i][j][l] = (h1_soble[i][j][l] + h2_soble[i][j][l]);
+			}
+		}
+	}
+
+	for (int i = 0; i < SIZE; i++) {
+		for (int j = 0; j < SIZE; j++) {
+			for (int l = 0; l < RGB; l++) {
+			   if(temp[i][j][l] > 0 && temp[i][j][l] < 265){
+					out[i][j][l] = (unsigned char)temp[i][j][l];
 				}
-				else if ((unsigned char)h1_soble[i][j][k] + (unsigned char)h2_soble[i][j][k] > 255) {
-					out[i][j][k] = 255;
+				else if(temp[i][j][l] > 255){
+				   out[i][j][l] = 255;
 				}
-				else {
-					out[i][j][k] = 0;
+				else{
+				   out[i][j][l] = 0;
 				}
 			}
 		}
 	}
 
-	// Add the rest of your functions here (i.e. gaussian, gaussian_filter, unsharp)
+
 }
 
 //Generates the Kernel to be used, stores it in the 2D array passed to it (hopefully)
 void gaussian(double kernel[][11], int N, double sigma){
 
 	//A = 1 so we're ignoring it
-
 	double r, s = 2.0 * sigma * sigma;
 
 	// sum will be used to normalize kernel
 	double sum = 0.0;
 
 	// generate NxN kernel
-	for (int x = (-N/2); x <= (N/2); x++)
+	for (int x = (int)(-N/2); x <= (int)(N/2); x++)
 	{
-		for(int y = (-N/2); y <= (N/2); y++)
+		for(int y = (int)(-N/2); y <= (int)(N/2); y++)
 		{
 			//r stores our exponent
 			r = (x*x + y*y)/s;
 			//Final calculation is made here and Gaussian indexes are converted to C++ indexes
-			kernel[x + 5][y + 5] = exp(r*-1.0);
-			sum += kernel[x + 5][y + 5];
+			kernel[x + (int)(N/2)][y + (int)(N/2)] = exp(r*-1.0);
+			sum += kernel[x + (int)(N/2)][y + (int)(N/2)];
 		}
 	}
 
 	// normalize the Kernel
-	for(int i = 0; i < 5; ++i){
-		for(int j = 0; j < 5; ++j){
+	for(int i = 0; i < N; ++i){
+		for(int j = 0; j < N; ++j){
 			kernel[i][j] /= sum;
 		}
 	}
 
-
+   cout << endl;
 	//Prints the final kernel to the screen
-	for(int i = 0; i < 11; i++){
-		for(int j = 0; j < 11; j++){
+	for(int i = 0; i < N; i++){
+		for(int j = 0; j < N; j++){
 			cout << kernel[i][j] << " ";
 		}
 		cout << endl;
 	}
+	sum = 0;
+	for(int i = 0; i < N; i++){
+		for(int j = 0; j < N; j++){
+			sum += kernel[i][j];
+		}
+	}
+
+	cout << "Gaussian Sum = " << sum << endl;
+	cout << endl << "This is the end, my only friend, the end" << endl;
 }
 void gaussian_filter(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB], int N, double sigma){
 	//Passes a blank kernel to the gaussian method in order to generate a filter kernel
 	double kernel[11][11];
-	gaussian(kernel, 4, 10);
-	convolve(out, in, 11, kernel);
+	gaussian(kernel, N, sigma);
+	convolve(out, in, N, kernel);
 
 
 }
-void usharp(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB]){
+void unsharp(unsigned char out[][SIZE][RGB], unsigned char in[][SIZE][RGB], int N, double sigma, double alpha){
 
 	//Stores a blurred image in "out"
-	gaussian_filter(out, in, 3, 10);
+	gaussian_filter(out, in, N, sigma);
 
-	//Subtracts the blurred image from the original input image
+   int D[SIZE][SIZE][RGB];
+   int S[SIZE][SIZE][RGB];
+
+	//Subtracts the blurred image from the original input image and stores it in temp
 	for(int i = 0; i < SIZE; i++){
 		for(int j = 0; j < SIZE; j++){
 			for(int k = 0; k < RGB; k++){
-				in[i][j][k] -= out[i][j][k];
+				D[i][j][k] = in[i][j][k] - out[i][j][k];
 			}
 		}
 	}
+
+	for(int i = 0; i < SIZE; i++){
+		for(int j = 0; j < SIZE; j++){
+			for(int k = 0; k < RGB; k++){
+				S[i][j][k] = in[i][j][k] + (alpha*(D[i][j][k]));
+			}
+		}
+	}
+
+
 
 	//copies values of in into out
-	for(int i = 0; i < SIZE; i++){
-		for(int j = 0; j < SIZE; j++){
-			for(int k = 0; k < RGB; k++){
-				if(in[i][j][k] > 0){
-					out[i][j][k] = in[i][j][k];
+	for (int i = 0; i < SIZE; i++) {
+		for (int j = 0; j < SIZE; j++) {
+			for (int k = 0; k < RGB; k++) {
+			   if(S[i][j][k] > 0 && S[i][j][k] < 265){
+					out[i][j][k] = (unsigned char)S[i][j][k];
+				}
+				else if(S[i][j][k] > 255){
+				   out[i][j][k] = 255;
 				}
 				else{
-					out[i][j][k] = 0;
+				   out[i][j][k] = 0;
 				}
 			}
 		}
 	}
+
 }
-
-
-
-
